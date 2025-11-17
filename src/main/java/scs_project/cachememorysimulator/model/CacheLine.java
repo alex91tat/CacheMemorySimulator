@@ -7,12 +7,16 @@ public class CacheLine {
     private int[] data;
     private boolean isValid; // if cache line occupied
     private boolean isDirty; // if this line has been modified
+    private int lastAccessTime;
+    private int fifoOrder;
 
     public CacheLine(int blockSize) {
         this.tag = -1;
         this.data = new int[blockSize];
         this.isValid = false;
         this.isDirty = false;
+        this.lastAccessTime = 0;
+        this.fifoOrder = 0;
     }
 
     public void loadData(int[] block, int tag) {
@@ -52,6 +56,22 @@ public class CacheLine {
 
     public void setDirty(boolean dirty) {
         isDirty = dirty;
+    }
+
+    public int getLastAccessTime() {
+        return lastAccessTime;
+    }
+
+    public void setLastAccessTime(int lastAccessTime) {
+        this.lastAccessTime = lastAccessTime;
+    }
+
+    public int getFifoOrder() {
+        return fifoOrder;
+    }
+
+    public void setFifoOrder(int fifoOrder) {
+        this.fifoOrder = fifoOrder;
     }
 
     @Override
