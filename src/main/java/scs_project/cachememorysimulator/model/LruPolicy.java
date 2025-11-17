@@ -1,4 +1,23 @@
 package scs_project.cachememorysimulator.model;
 
 public class LruPolicy implements ReplacementPolicy {
+    @Override
+    public CacheLine findVictim(CacheSet set) {
+        CacheLine[] lines = set.getLines();
+        for (CacheLine line : lines) {
+            if (!line.isValid()) {
+                set.moveToHead(line);
+                return line;
+            }
+        }
+
+        CacheLine victim = set.getTail();
+        set.moveToHead(victim);
+        return victim;
+    }
+
+    @Override
+    public void onAccess(CacheSet set, CacheLine line) {
+        set.moveToHead(line);
+    }
 }

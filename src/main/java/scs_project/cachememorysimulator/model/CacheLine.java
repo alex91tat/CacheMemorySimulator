@@ -7,16 +7,18 @@ public class CacheLine {
     private int[] data;
     private boolean isValid; // if cache line occupied
     private boolean isDirty; // if this line has been modified
-    private int lastAccessTime;
-    private int fifoOrder;
+
+    // for LRU doubly-linked list
+    CacheLine prev;
+    CacheLine next;
 
     public CacheLine(int blockSize) {
         this.tag = -1;
         this.data = new int[blockSize];
         this.isValid = false;
         this.isDirty = false;
-        this.lastAccessTime = 0;
-        this.fifoOrder = 0;
+        this.prev = null;
+        this.next = null;
     }
 
     public void loadData(int[] block, int tag) {
@@ -24,6 +26,12 @@ public class CacheLine {
         this.isDirty = false;
         this.tag = tag;
         System.arraycopy(block, 0, this.data, 0, this.data.length);
+    }
+
+    public void reset() {
+        this.isValid = false;
+        this.isDirty = false;
+        this.tag = -1;
     }
 
     public int getTag() {
@@ -56,22 +64,6 @@ public class CacheLine {
 
     public void setDirty(boolean dirty) {
         isDirty = dirty;
-    }
-
-    public int getLastAccessTime() {
-        return lastAccessTime;
-    }
-
-    public void setLastAccessTime(int lastAccessTime) {
-        this.lastAccessTime = lastAccessTime;
-    }
-
-    public int getFifoOrder() {
-        return fifoOrder;
-    }
-
-    public void setFifoOrder(int fifoOrder) {
-        this.fifoOrder = fifoOrder;
     }
 
     @Override
