@@ -6,9 +6,11 @@ import java.util.Map;
 
 public class MainMemory {
     private Map<Integer, int[]> memory;
+    private int size;
 
-    public MainMemory() {
+    public MainMemory(int size) {
         this.memory = new HashMap<>();
+        this.size = size;
     }
 
     public int[] read(int address, int blockSize) {
