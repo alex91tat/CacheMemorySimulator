@@ -1,43 +1,35 @@
 package scs_project.cachememorysimulator.model;
 
 public class DirectMappingStrategy implements AddressMappingStrategy {
-    private int offsetBits; // 'n' bits in Fig 3.4
-    private int indexBits;  // 's' bits (Index Field) in Fig 3.4
-    private int indexMask;
+    private final int offsetBits;
+    private final int indexBits;
+    private final int tagBits;
 
-    @Override
-    public void configure(int cacheSize, int associativity, int blockSize) {
-        // In Direct Mapping, associativity is ALWAYS 1.
-        // Number of lines = Cache Size / Block Size.
-        int numLines = cacheSize / blockSize;
-
-        // 1. Calculate Offset Bits (n bits)
+    public DirectMappingStrategy(int blockSize, int numberOfSets) {
         this.offsetBits = (int) (Math.log(blockSize) / Math.log(2));
-
-        // 2. Calculate Index Bits (s bits)
-        // In Direct Mapping, the "Set Index" identifies the specific Line.
-        this.indexBits = (int) (Math.log(numLines) / Math.log(2));
-
-        // Create a bitmask to extract the index (e.g., if index is 3 bits, mask is 111 -> 7)
-        this.indexMask = (1 << indexBits) - 1;
+        this.indexBits = (int) (Math.log(numberOfSets) / Math.log(2));
+        this.tagBits = 32 - offsetBits - indexBits;
     }
 
     @Override
-    public int getSetIndex(int address) {
-        // Formula: (Memory Block Number) mod (Number of Cache Lines)
-        // Shifting right by offsetBits gives us the "Block Number".
-        // ANDing with indexMask performs the "mod" operation for power-of-2 sizes.
-        return (address >> offsetBits) & indexMask;
+    public int extractOffset(int address) {
+        return address & ((1 << offsetBits) - 1);
     }
 
     @Override
-    public int getTag(int address) {
-        // Tag is the remaining upper bits after removing Offset and Index
-        return address >> (offsetBits + indexBits);
+    public int extractIndex(int address) {
+        return (address >>> offsetBits) & ((1 << indexBits) - 1);
     }
 
     @Override
-    public int reconstructAddress(int tag, int setIndex) {
-        return (tag << (offsetBits + indexBits)) | (setIndex << offsetBits);
+    public int extractTag(int address) {
+        return address >>> (offsetBits + indexBits);
+    }
+
+    @Override
+    public int reconstructAddress(int tag, int index, int offset) {
+        return (tag << (indexBits + offsetBits)) | 
+               (index << offsetBits) | 
+               offset;
     }
 }

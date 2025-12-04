@@ -1,81 +1,61 @@
 package scs_project.cachememorysimulator.model;
 
 public class Cache {
-    private CacheSet[] sets;
-    private AddressMappingStrategy mappingStrategy;
-    private ReplacementPolicy replacementPolicy;
+    private int cacheSize;
     private int blockSize;
+    private int associativity;
+    private int numberOfSets;
+    private CacheSet[] sets;
+    private ReplacementPolicy policy;
 
-    public Cache(int cacheSize, int associativity, int blockSize,
-                 AddressMappingStrategy mappingStrategy,
-                 ReplacementPolicy replacementPolicy) {
-
+    public Cache(int cacheSize, int blockSize, int associativity, AddressMappingStrategy map, ReplacementPolicy policy) {
+        this.cacheSize = cacheSize;
         this.blockSize = blockSize;
-        this.mappingStrategy = mappingStrategy;
-        this.replacementPolicy = replacementPolicy;
+        this.associativity = associativity;
+        this.policy = policy;
 
-        // Configure the specific mapping strategy (Direct, Set, or Fully)
-        this.mappingStrategy.configure(cacheSize, associativity, blockSize);
-
-        // Calculate number of sets based on mapping
-        // For Fully Associative, this results in 1 set.
-        // For Direct, it results in cacheSize/blockSize sets.
-        int numSets = cacheSize / (blockSize * associativity);
-
-        this.sets = new CacheSet[numSets];
-        for (int i = 0; i < numSets; i++) {
-            this.sets[i] = new CacheSet(associativity, blockSize);
+        if (map instanceof SetAssociativeMappingStrategy) {
+            this.numberOfSets = cacheSize / (blockSize * associativity);
+            sets = new CacheSet[numberOfSets];
+            for (int i = 0; i < numberOfSets; i++) {
+                sets[i] = new CacheSet(associativity, blockSize);
+            }
+        }
+        else if (map instanceof DirectMappingStrategy) {
+            int numberOfLines = cacheSize / blockSize;
+            sets = new CacheSet[numberOfLines];
+            for (int i = 0; i < numberOfLines; i++) {
+                sets[i] = new CacheSet(1, blockSize);
+            }
+        }
+        else {
+            // Fully associative: single set with all lines
+            sets = new CacheSet[1];
+            sets[0] = new CacheSet(cacheSize / blockSize, blockSize);
         }
     }
 
-    public CacheLine read(int address) {
-        int setIndex = mappingStrategy.getSetIndex(address);
-        int tag = mappingStrategy.getTag(address);
-
-        CacheSet set = sets[setIndex];
-        CacheLine line = set.findLine(tag);
-
-        if (line != null) {
-            // Notify replacement policy (e.g., LRU updates list head)
-            replacementPolicy.onAccess(set, line);
-            return line;
-        }
-        return null;
+    public CacheSet[] getSets() {
+        return this.sets;
     }
 
-    public CacheLine installBlock(int address, int[] data) {
-        int setIndex = mappingStrategy.getSetIndex(address);
-        int tag = mappingStrategy.getTag(address);
-        CacheSet set = sets[setIndex];
-
-        // 1. Find a victim using the policy (Random, LRU, FIFO) [cite: 215]
-        CacheLine victim = replacementPolicy.findVictim(set);
-
-        // 2. If the victim is valid, we capture its state for Write-Back checking
-        CacheLine evictedState = null;
-        if (victim.isValid()) {
-            evictedState = new CacheLine(blockSize);
-            evictedState.setTag(victim.getTag());
-            evictedState.setData(victim.getData());
-            evictedState.setDirty(victim.isDirty());
-            evictedState.setValid(true);
-        }
-
-        // 3. Update the internal Map and Data
-        set.updateTagMap(victim.getTag(), tag, victim);
-        victim.loadData(data, tag);
-
-        // For LRU/FIFO, ensure the new line is treated as "new" (e.g., move to head or enqueue)
-        replacementPolicy.onAccess(set, victim);
-
-        return evictedState;
+    public int getCacheSize() {
+        return this.cacheSize;
     }
 
-    public int getSetIndex(int address) {
-        return mappingStrategy.getSetIndex(address);
+    public int getNumberOfSets() {
+        return this.numberOfSets;
     }
 
-    public int reconstructAddress(int tag, int setIndex) {
-        return mappingStrategy.reconstructAddress(tag, setIndex);
+    public int getAssociativity() {
+        return this.associativity;
+    }
+
+    public int getBlockSize() {
+        return this.blockSize;
+    }
+
+    public ReplacementPolicy getReplacementPolicy() {
+        return this.policy;
     }
 }

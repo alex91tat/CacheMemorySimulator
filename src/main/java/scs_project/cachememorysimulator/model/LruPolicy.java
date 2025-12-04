@@ -4,6 +4,7 @@ public class LruPolicy implements ReplacementPolicy {
     @Override
     public CacheLine findVictim(CacheSet set) {
         CacheLine[] lines = set.getLines();
+
         for (CacheLine line : lines) {
             if (!line.isValid()) {
                 set.moveToHead(line);

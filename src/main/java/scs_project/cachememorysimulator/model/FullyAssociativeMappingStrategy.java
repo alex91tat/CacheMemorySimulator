@@ -1,31 +1,30 @@
 package scs_project.cachememorysimulator.model;
 
 public class FullyAssociativeMappingStrategy implements AddressMappingStrategy {
-    private int offsetBits; // 'n' bits
+    private final int offsetBits;
 
-    @Override
-    public void configure(int cacheSize, int associativity, int blockSize) {
-        // Figure 3.5 shows ONLY Tag and Block Offset.
-        // There is effectively only 1 Set (Set 0), which contains ALL lines.
+    public FullyAssociativeMappingStrategy(int blockSize) {
         this.offsetBits = (int) (Math.log(blockSize) / Math.log(2));
     }
 
     @Override
-    public int getSetIndex(int address) {
-        // There is no index field.
-        // We always return 0 because there is only one "group" (the whole cache).
-        return 0;
+    public int extractOffset(int address) {
+        return address & ((1 << offsetBits) - 1);
     }
 
     @Override
-    public int getTag(int address) {
-        // Everything above the offset is the Tag.
-        return address >> offsetBits;
+    public int extractIndex(int address) {
+        return 0; // In fully associative cache, there's only one set
     }
 
     @Override
-    public int reconstructAddress(int tag, int setIndex) {
-        // setIndex is ignored (it's always 0)
-        return tag << offsetBits;
+    public int extractTag(int address) {
+        return address >>> offsetBits; // Everything except offset becomes tag
+    }
+
+    @Override
+    public int reconstructAddress(int tag, int index, int offset) {
+        return (tag << offsetBits) | offset;
+        // Note: index is ignored in fully associative mapping
     }
 }

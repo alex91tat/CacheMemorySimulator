@@ -1,11 +1,10 @@
 package scs_project.cachememorysimulator.model;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainMemory {
-    private Map<Integer, int[]> memory;
+    private Map<Integer, String> memory;
     private int size;
 
     public MainMemory(int size) {
@@ -13,18 +12,16 @@ public class MainMemory {
         this.size = size;
     }
 
-    public int[] read(int address, int blockSize) {
-        if (memory.containsKey(address)) {
-            int[] data = memory.get(address);
-            return Arrays.copyOf(data, data.length);
-        }
-
-        // if the address doesn t exist yet we return zeros
-        return new int[blockSize];
+    public String read(int address, int blockSize) {
+        int blockAddress = (address / blockSize) * blockSize;
+        return memory.getOrDefault(blockAddress, "Empty");
     }
 
-    public void write(int address, int[] data) {
-        memory.put(address, Arrays.copyOf(data, data.length));
+    /**
+     * Write the value at 'address'.
+     */
+    public void write(int address, String data) {
+        memory.put(address, data);
     }
 
     public void displayMemoryState() {
@@ -35,8 +32,8 @@ public class MainMemory {
         if (memory.isEmpty()) {
             System.out.println("Memory is empty.");
         } else {
-            for (Map.Entry<Integer, int[]> entry : memory.entrySet()) {
-                System.out.println("Address: " + entry.getKey() + " | Data: " + Arrays.toString(entry.getValue()));
+            for (Map.Entry<Integer, String> entry : memory.entrySet()) {
+                System.out.println("Address: " + entry.getKey() + " | Data: " + entry.getValue());
             }
         }
     }

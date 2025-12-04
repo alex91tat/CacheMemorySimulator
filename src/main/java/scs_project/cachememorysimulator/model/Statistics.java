@@ -20,12 +20,10 @@ public class Statistics {
         dirtyEvictions++;
     }
 
-    // Hit Ratio = Total Hits / Total Accesses [cite: 131]
     public double getHitRate() {
         return totalAccesses == 0 ? 0 : (double) hits / totalAccesses;
     }
 
-    // Miss Ratio = Total Misses / Total Accesses [cite: 134]
     public double getMissRate() {
         return totalAccesses == 0 ? 0 : (double) misses / totalAccesses;
     }
@@ -36,6 +34,7 @@ public class Statistics {
                 "Hits=" + hits +
                 ", Misses=" + misses +
                 ", Hit Rate=" + String.format("%.2f%%", getHitRate() * 100) +
+                ", Miss Rate=" + String.format("%.2f%%", getMissRate() * 100) +
                 ", Dirty Evictions=" + dirtyEvictions +
                 '}';
     }

@@ -1,96 +1,158 @@
 package scs_project.cachememorysimulator.controller;
 
-import scs_project.cachememorysimulator.model.Cache;
-import scs_project.cachememorysimulator.model.CacheLine;
-import scs_project.cachememorysimulator.model.MainMemory;
-import scs_project.cachememorysimulator.model.Statistics;
+import scs_project.cachememorysimulator.model.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainSimulationController {
-    private MainMemory memory;
-    private Cache cache;
-    private Statistics statistics;
-    private int blockSize;
 
-    public MainSimulationController(MainMemory memory, Cache cache, int blockSize) {
-        this.memory = memory;
-        this.cache = cache;
-        this.blockSize = blockSize;
+    private final Cache cache;
+    private final MainMemory mainMemory;
+    private final Statistics statistics;
+    private final WritingPolicy writingPolicy;
+    private final AddressMappingStrategy mappingStrategy;
+    private final Map<CacheLine, Integer> lineToAddressMap;
+
+    public MainSimulationController(int cacheSize, int blockSize, int associativity,
+                                    AddressMappingStrategy mappingStrategy,
+                                    ReplacementPolicy replacementPolicy,
+                                    WritingPolicy writingPolicy,
+                                    MainMemory mainMemory) {
+
+        this.mappingStrategy = mappingStrategy;
+        this.writingPolicy = writingPolicy;
+        this.mainMemory = mainMemory;            // ✔ Use external memory
+        this.cache = new Cache(cacheSize, blockSize, associativity, mappingStrategy, replacementPolicy);
         this.statistics = new Statistics();
+        this.lineToAddressMap = new HashMap<>();
     }
 
-    public int[] read(int address) {
-        CacheLine line = cache.read(address);
+    private void printAddressBreakdown(int address) {
 
-        if (line != null) {
+        int tag = mappingStrategy.extractTag(address);
+        int index = mappingStrategy.extractIndex(address);
+        int blockOffset = address % cache.getBlockSize();
+
+        System.out.print("  Address breakdown: Tag=0x"
+                + Integer.toHexString(tag).toUpperCase());
+
+        if (mappingStrategy instanceof DirectMappingStrategy) {
+            System.out.println(", Index=" + index + ", Block Offset=" + blockOffset);
+        }
+        else if (mappingStrategy instanceof SetAssociativeMappingStrategy) {
+            System.out.println(", Set=" + index + ", Block Offset=" + blockOffset);
+        }
+        else if (mappingStrategy instanceof FullyAssociativeMappingStrategy) {
+            System.out.println(", Block Offset=" + blockOffset);
+        }
+    }
+
+    public String read(int address) {
+        printAddressBreakdown(address);
+
+        int index = mappingStrategy.extractIndex(address);
+        int tag   = mappingStrategy.extractTag(address);
+
+        CacheSet set = cache.getSets()[index];
+        CacheLine line = set.findLine(tag);
+
+        if (line != null && line.isValid()) {
+            System.out.println("Cache Hit");
             statistics.recordHit();
+            cache.getReplacementPolicy().onAccess(set, line);
             return line.getData();
         }
 
+        System.out.println("Cache Miss");
         statistics.recordMiss();
 
-        int[] data = memory.read(address, blockSize);
+        handleReadMiss(address, tag, set);
 
-        // 3. Install the fetched block into the cache
-        //    (This handles finding a victim and writing-back if dirty)
-        handleCacheInstallation(address, data, false);
-
-        return data;
+        return "Empty";
     }
 
-    public void write(int address, int[] data) {
-        // 1. Try to find the line in the cache
-        CacheLine line = cache.read(address);
+    private void handleReadMiss(int address, int tag, CacheSet set) {
 
-        if (line != null) {
-            // --- CACHE HIT (Write-Back) ---
-            statistics.recordHit();
-            // 2. Write data ONLY to the cache
-            line.setData(data);
-            // 3. Mark the line as dirty
-            line.setDirty(true);
-        } else {
-            // --- CACHE MISS (Write-Allocate) ---
-            statistics.recordMiss();
-            // 2. Install the new data block into the cache
-            //    (This handles finding a victim and writing-back if dirty)
-            handleCacheInstallation(address, data, true);
-        }
-    }
+        CacheLine victim = cache.getReplacementPolicy().findVictim(set);
 
-    /**
-     * Private helper to handle placing a block in the cache on a miss.
-     * This method contains the core Write-Back eviction logic.
-     */
-    private void handleCacheInstallation(int address, int[] data, boolean isWriteOperation) {
-        // 1. Call Cache.installBlock()
-        // This finds a victim line, loads the new data, and returns
-        // a *copy* of the line that was evicted (if any).
-        CacheLine evicted = cache.installBlock(address, data);
-
-        // 2. Check if we evicted a valid, "dirty" line
-        if (evicted != null && evicted.isValid() && evicted.isDirty()) {
-            // This is the "Write-Back"
+        if (victim.isValid() && victim.isDirty()) {
             statistics.recordDirtyEviction();
-
-            // 3. Reconstruct the full address of the evicted block
-            int setIndex = cache.getSetIndex(address); // It came from the same set
-            int evictedAddress = cache.reconstructAddress(evicted.getTag(), setIndex);
-
-            // 4. Write its data to Main Memory
-            memory.write(evictedAddress, evicted.getData());
+            Integer oldAddress = lineToAddressMap.get(victim);
+            if (oldAddress != null) {
+                writingPolicy.handleEviction(mainMemory, victim, oldAddress);
+                lineToAddressMap.remove(victim);
+            }
         }
 
-        // 5. If this installation was for a Write operation,
-        //    we must find the line we just installed and mark it as dirty.
-        if (isWriteOperation) {
-            CacheLine newlyInstalledLine = cache.read(address);
-            if (newlyInstalledLine != null) {
-                newlyInstalledLine.setDirty(true);
+        int blockAddress = (address / cache.getBlockSize()) * cache.getBlockSize();
+        String blockData = mainMemory.read(blockAddress, cache.getBlockSize());
+
+        int oldTag = victim.getTag();
+        victim.loadData(blockData, tag);
+        victim.setValid(true);
+        victim.setDirty(false);
+
+        set.updateTagMap(oldTag, tag, victim);
+        lineToAddressMap.put(victim, blockAddress);
+
+        cache.getReplacementPolicy().onAccess(set, victim);
+    }
+
+
+    public void write(int address, String value) {
+
+        int index = mappingStrategy.extractIndex(address);
+        int tag   = mappingStrategy.extractTag(address);
+
+        CacheSet set = cache.getSets()[index];
+        CacheLine line = set.findLine(tag);
+
+        if (line != null && line.isValid()) {
+            cache.getReplacementPolicy().onAccess(set, line);
+            writingPolicy.handleWrite(mainMemory, line, address, value);
+            return;
+        }
+
+        handleWriteMiss(address, value, tag, set);
+    }
+
+    private void handleWriteMiss(int address, String value, int tag, CacheSet set) {
+
+        CacheLine victim = cache.getReplacementPolicy().findVictim(set);
+
+        if (victim.isValid() && victim.isDirty()) {
+            statistics.recordDirtyEviction();
+            Integer oldAddress = lineToAddressMap.get(victim);
+            if (oldAddress != null) {
+                writingPolicy.handleEviction(mainMemory, victim, oldAddress);
+                lineToAddressMap.remove(victim);
+            }
+        }
+
+        int oldTag = victim.getTag();
+        victim.loadData(value, tag);
+        victim.setValid(true);
+
+        set.updateTagMap(oldTag, tag, victim);
+        lineToAddressMap.put(victim, address);
+
+        writingPolicy.handleWrite(mainMemory, victim, address, value);
+        cache.getReplacementPolicy().onAccess(set, victim);
+    }
+
+
+    public void displayCacheState() {
+        System.out.println("Cache State:");
+        for (int i = 0; i < cache.getSets().length; i++) {
+            System.out.println("Set " + i + ":");
+            for (CacheLine line : cache.getSets()[i].getLines()) {
+                System.out.println(line);
             }
         }
     }
 
-    public Statistics getStatistics() {
-        return statistics;
-    }
+    public Statistics getStatistics() { return statistics; }
+
+    public void displayMemoryState() { mainMemory.displayMemoryState(); }
 }

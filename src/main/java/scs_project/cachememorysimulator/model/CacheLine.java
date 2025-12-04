@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class CacheLine {
     private int tag;
-    private int[] data;
+    private String data;
     private boolean isValid; // if cache line occupied
     private boolean isDirty; // if this line has been modified
 
@@ -12,26 +12,27 @@ public class CacheLine {
     CacheLine prev;
     CacheLine next;
 
-    public CacheLine(int blockSize) {
+    public CacheLine() {
         this.tag = -1;
-        this.data = new int[blockSize];
+        this.data = "";
         this.isValid = false;
         this.isDirty = false;
         this.prev = null;
         this.next = null;
     }
 
-    public void loadData(int[] block, int tag) {
+    public void loadData(String block, int tag) {
         this.isValid = true;
         this.isDirty = false;
         this.tag = tag;
-        System.arraycopy(block, 0, this.data, 0, this.data.length);
+        this.data = block;
     }
 
     public void reset() {
         this.isValid = false;
         this.isDirty = false;
         this.tag = -1;
+        this.data = "";
     }
 
     public int getTag() {
@@ -42,12 +43,13 @@ public class CacheLine {
         this.tag = tag;
     }
 
-    public int[] getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(int[] data) {
-        System.arraycopy(data, 0, this.data, 0, this.data.length);
+    public void setData(String data) {
+        this.data = data;
+        this.isDirty = true;
     }
 
     public boolean isValid() {
@@ -72,6 +74,6 @@ public class CacheLine {
             return "Empty CacheLine";
         }
 
-        return String.format("Tag: %d, Data: %s, Dirty: %s", tag, Arrays.toString(data), isDirty);
+        return String.format("Tag: %d, Data: %s, Dirty: %s", tag, data, isDirty);
     }
 }

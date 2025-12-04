@@ -14,7 +14,7 @@ public class CacheSet {
     public CacheSet(int associativity, int blockSize) {
         this.lines = new CacheLine[associativity];
         for (int i = 0; i < this.lines.length; i++) {
-            this.lines[i] = new CacheLine(blockSize);
+            this.lines[i] = new CacheLine();
         }
 
         this.head = null;
