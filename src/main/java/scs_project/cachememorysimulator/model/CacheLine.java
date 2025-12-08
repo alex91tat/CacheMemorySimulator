@@ -74,6 +74,10 @@ public class CacheLine {
             return "Empty CacheLine";
         }
 
-        return String.format("Tag: %d, Data: %s, Dirty: %s", tag, data, isDirty);
+        int dirty = 1;
+        if (!this.isDirty)
+            dirty = 0;
+
+        return String.format("Valid: 1, Tag: 0x%X, Dirty: %d, Data: %s", tag, dirty, data);
     }
 }

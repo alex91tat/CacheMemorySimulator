@@ -17,7 +17,7 @@ public class Main {
 
 
         System.out.println("=" + "=".repeat(49));
-        System.out.println("DIRECT MAPPING SIMULATION");
+        System.out.println("DIRECT MAPPING");
         System.out.println("=" + "=".repeat(49));
         System.out.println("Cache: " + cacheSize + " bytes, Block: " + blockSize + " bytes");
 
@@ -42,7 +42,7 @@ public class Main {
         System.out.println(directController.getStatistics());
 
         System.out.println("\n\n" + "=" + "=".repeat(49));
-        System.out.println("FULLY ASSOCIATIVE MAPPING SIMULATION");
+        System.out.println("FULLY ASSOCIATIVE MAPPING");
         System.out.println("=" + "=".repeat(49));
         System.out.println("Cache: " + cacheSize + " bytes, Block: " + blockSize + " bytes");
 
@@ -71,7 +71,7 @@ public class Main {
         fullyAssociativeController.displayMemoryState();
 
         System.out.println("\n\n" + "=" + "=".repeat(49));
-        System.out.println("SET-ASSOCIATIVE MAPPING SIMULATION");
+        System.out.println("SET-ASSOCIATIVE MAPPING");
         System.out.println("=" + "=".repeat(49));
         System.out.println("Cache: " + cacheSize + " bytes, Block: " + blockSize + " bytes");
 
@@ -104,20 +104,15 @@ public class Main {
         DirectMappingStrategy dmWB = new DirectMappingStrategy(blockSize, cacheSize / blockSize);
 
         MainSimulationController wbController = new MainSimulationController(
-                cacheSize, blockSize, 1, dmWB, new LruPolicy(), wb, mainMemory
-        );
+                cacheSize, blockSize, 1, dmWB, new LruPolicy(), wb, mainMemory);
 
         wbController.read(0);
+        wbController.write(0, "D_modified");
 
-        wbController.write(0, "MODIFIED_WB");
-
-        System.out.println("Memory at 0 (should NOT be modified yet): " +
-                mainMemory.read(0, blockSize));
-
+        System.out.println("Main Memory at 0: " + mainMemory.read(0, blockSize));
         wbController.read(1024);
 
-        System.out.println("Memory at 0 after eviction (SHOULD be MODIFIED_WB): " +
-                mainMemory.read(0, blockSize));
+        System.out.println("Memory at 0 after eviction: " + mainMemory.read(0, blockSize));
 
 
 
@@ -134,9 +129,8 @@ public class Main {
 
         wtController.read(64);
 
-        wtController.write(64, "WT_DATA");
+        wtController.write(64, "D_data");
 
-        System.out.println("Memory at 64 (should be WT_DATA): " +
-                mainMemory.read(64, blockSize));
+        System.out.println("Main Memory at 64 (should be WT_DATA): " + mainMemory.read(64, blockSize));
     }
 }

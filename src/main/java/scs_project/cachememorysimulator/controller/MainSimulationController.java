@@ -77,7 +77,6 @@ public class MainSimulationController {
         CacheLine victim = cache.getReplacementPolicy().findVictim(set);
 
         if (victim.isValid() && victim.isDirty()) {
-            statistics.recordDirtyEviction();
             Integer oldAddress = lineToAddressMap.get(victim);
             if (oldAddress != null) {
                 writingPolicy.handleEviction(mainMemory, victim, oldAddress);
@@ -122,7 +121,6 @@ public class MainSimulationController {
         CacheLine victim = cache.getReplacementPolicy().findVictim(set);
 
         if (victim.isValid() && victim.isDirty()) {
-            statistics.recordDirtyEviction();
             Integer oldAddress = lineToAddressMap.get(victim);
             if (oldAddress != null) {
                 writingPolicy.handleEviction(mainMemory, victim, oldAddress);

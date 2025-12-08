@@ -17,24 +17,26 @@ public class MainMemory {
         return memory.getOrDefault(blockAddress, "Empty");
     }
 
-    /**
-     * Write the value at 'address'.
-     */
+
     public void write(int address, String data) {
         memory.put(address, data);
     }
 
     public void displayMemoryState() {
         System.out.println("---------------------------------");
-        System.out.println("Memory State (Non-zero blocks):");
+        System.out.println("Memory State:");
         System.out.println("---------------------------------");
 
         if (memory.isEmpty()) {
             System.out.println("Memory is empty.");
         } else {
-            for (Map.Entry<Integer, String> entry : memory.entrySet()) {
-                System.out.println("Address: " + entry.getKey() + " | Data: " + entry.getValue());
-            }
+            memory.entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry ->
+                            System.out.println("Address: " + entry.getKey() + " | Data: " + entry.getValue())
+                    );
+
         }
     }
 }

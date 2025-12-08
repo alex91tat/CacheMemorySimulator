@@ -4,7 +4,6 @@ public class Statistics {
     private int hits = 0;
     private int misses = 0;
     private int totalAccesses = 0;
-    private int dirtyEvictions = 0;
 
     public void recordHit() {
         hits++;
@@ -14,10 +13,6 @@ public class Statistics {
     public void recordMiss() {
         misses++;
         totalAccesses++;
-    }
-
-    public void recordDirtyEviction() {
-        dirtyEvictions++;
     }
 
     public double getHitRate() {
@@ -34,8 +29,6 @@ public class Statistics {
                 "Hits=" + hits +
                 ", Misses=" + misses +
                 ", Hit Rate=" + String.format("%.2f%%", getHitRate() * 100) +
-                ", Miss Rate=" + String.format("%.2f%%", getMissRate() * 100) +
-                ", Dirty Evictions=" + dirtyEvictions +
-                '}';
+                ", Miss Rate=" + String.format("%.2f%%", getMissRate() * 100);
     }
 }
