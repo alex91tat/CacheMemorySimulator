@@ -108,11 +108,13 @@ public class MainSimulationController {
         CacheLine line = set.findLine(tag);
 
         if (line != null && line.isValid()) {
+            statistics.recordHit();
             cache.getReplacementPolicy().onAccess(set, line);
             writingPolicy.handleWrite(mainMemory, line, address, value);
             return;
         }
 
+        statistics.recordMiss();
         handleWriteMiss(address, value, tag, set);
     }
 
@@ -133,7 +135,10 @@ public class MainSimulationController {
         victim.setValid(true);
 
         set.updateTagMap(oldTag, tag, victim);
-        lineToAddressMap.put(victim, address);
+
+        // ✅ IMPORTANT FIX: store block base address (not raw address)
+        int blockAddress = (address / cache.getBlockSize()) * cache.getBlockSize();
+        lineToAddressMap.put(victim, blockAddress);
 
         writingPolicy.handleWrite(mainMemory, victim, address, value);
         cache.getReplacementPolicy().onAccess(set, victim);
@@ -150,7 +155,13 @@ public class MainSimulationController {
         }
     }
 
-    public Statistics getStatistics() { return statistics; }
+    public Cache getCache() {
+        return cache;
+    }
+
+    public Statistics getStatistics() {
+        return statistics;
+    }
 
     public void displayMemoryState() { mainMemory.displayMemoryState(); }
 }

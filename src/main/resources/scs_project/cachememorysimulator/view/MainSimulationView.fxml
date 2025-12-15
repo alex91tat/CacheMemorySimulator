@@ -1,16 +1,270 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
+<BorderPane prefHeight="850" prefWidth="1400" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scs_project.cachememorysimulator.controller.MainUIController">
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scs_project.cachememorysimulator.controller.MainUIController">
+    <!-- ======================= TOP TITLE ======================= -->
     <top>
         <Label text="Cache Memory Simulator" BorderPane.alignment="CENTER">
             <font>
-                <Font size="18.0" />
+                <Font size="26" />
             </font>
+            <padding>
+                <Insets bottom="15" top="15" />
+            </padding>
         </Label>
     </top>
+
+    <!-- ======================= LEFT CONTROL PANEL ======================= -->
+    <left>
+        <ScrollPane fitToWidth="true" prefWidth="320">
+            <content>
+                <VBox spacing="16">
+
+                    <padding>
+                        <Insets bottom="15" left="15" right="15" top="15" />
+                    </padding>
+
+                    <!-- ===== Cache Configuration ===== -->
+                    <TitledPane collapsible="false" text="Cache Configuration">
+                        <content>
+                            <GridPane hgap="12" vgap="10">
+
+                                <padding>
+                                    <Insets bottom="10" left="10" right="10" top="10" />
+                                </padding>
+
+                                <columnConstraints>
+                                    <ColumnConstraints prefWidth="160" />
+                                    <ColumnConstraints prefWidth="140" />
+                                </columnConstraints>
+
+                                <Label text="Cache Size (bytes)" GridPane.rowIndex="0" />
+                                <TextField fx:id="cacheSizeField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                <Label text="Block Size (bytes)" GridPane.rowIndex="1" />
+                                <TextField fx:id="blockSizeField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                <Label text="Associativity" GridPane.rowIndex="2" />
+                                <TextField fx:id="associativityField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                <Label text="Mapping Strategy" GridPane.rowIndex="3" />
+                                <ComboBox fx:id="mappingCombo" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                                <Label text="Replacement Policy" GridPane.rowIndex="4" />
+                                <ComboBox fx:id="replacementCombo" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                                <Label text="Write Policy" GridPane.rowIndex="5" />
+                                <ComboBox fx:id="writePolicyCombo" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                                <HBox GridPane.rowIndex="6"
+                                      GridPane.columnSpan="2"
+                                      alignment="CENTER">
+
+                                    <padding>
+                                        <Insets top="10" right="10" bottom="10" left="10"/>
+                                    </padding>
+
+                                    <Button fx:id="applyConfigButton"
+                                            text="Set Configuration"
+                                            prefWidth="160"
+                                            onAction="#applyConfigButtonOnAction"/>
+                                </HBox>
+
+
+                        <rowConstraints>
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                           <RowConstraints />
+                            <RowConstraints />
+                        </rowConstraints>
+
+                            </GridPane>
+                        </content>
+                    </TitledPane>
+
+                    <!-- ===== Memory Access ===== -->
+                    <TitledPane collapsible="false" text="Memory Access">
+                        <content>
+                            <VBox spacing="10">
+
+                                <padding>
+                                    <Insets bottom="10" left="10" right="10" top="10" />
+                                </padding>
+
+                                <Label text="Address" />
+                                <TextField fx:id="addressField" />
+
+                                <Label text="Value (for write)" />
+                                <TextField fx:id="valueField" />
+
+                                <HBox alignment="CENTER" spacing="12">
+                                    <Button fx:id="readButton" prefWidth="80" text="Read" onAction="#readButtonOnAction"/>
+                                    <Button fx:id="writeButton" prefWidth="80" text="Write" onAction="#writeButtonOnAction"/>
+                                    <Button fx:id="resetButton" prefWidth="80" text="Reset" onAction="#resetButtonOnAction"/>
+                                </HBox>
+
+                            </VBox>
+                        </content>
+                    </TitledPane>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+    </left>
+
+    <!-- ======================= CENTER CACHE TABLE ======================= -->
+    <center>
+        <VBox spacing="10">
+
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+
+            <Label text="Cache Memory View">
+                <font>
+                    <Font size="18" />
+                </font>
+            </Label>
+
+            <TableView fx:id="cacheTable" prefHeight="600">
+                <!-- Columns added dynamically from controller -->
+            </TableView>
+
+        </VBox>
+    </center>
+
+    <!-- ======================= RIGHT MAIN MEMORY ======================= -->
+    <right>
+        <VBox prefWidth="380" spacing="10">
+
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+
+            <Label text="Main Memory View">
+                <font>
+                    <Font size="18" />
+                </font>
+            </Label>
+
+            <TableView fx:id="memoryTable" prefHeight="600">
+                <!-- Columns added dynamically from controller -->
+            </TableView>
+
+        </VBox>
+    </right>
+
+    <!-- ======================= BOTTOM STATISTICS ======================= -->
+    <bottom>
+        <TitledPane collapsible="false" text="Statistics" BorderPane.alignment="CENTER">
+            <content>
+                <StackPane>
+
+                    <padding>
+                        <Insets bottom="12" top="12" />
+                    </padding>
+
+                    <GridPane alignment="CENTER" hgap="40" vgap="12">
+
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="220" />
+                            <ColumnConstraints minWidth="140" />
+                        </columnConstraints>
+
+                        <!-- Labels -->
+                        <Label text="Total Accesses:" GridPane.rowIndex="0">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label fx:id="totalAccessLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label text="Hits:" GridPane.rowIndex="1">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label fx:id="hitLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label text="Misses:" GridPane.rowIndex="2">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label fx:id="missLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label text="Hit Rate:" GridPane.rowIndex="3">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label fx:id="hitRateLabel" text="0.00 %" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label text="Miss Rate:" GridPane.rowIndex="4">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+
+                        <Label fx:id="missRateLabel" text="0.00 %" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                            <font>
+                                <Font size="15" />
+                            </font>
+                        </Label>
+                  <rowConstraints>
+                     <RowConstraints />
+                     <RowConstraints />
+                     <RowConstraints />
+                     <RowConstraints />
+                     <RowConstraints />
+                  </rowConstraints>
+
+                    </GridPane>
+                </StackPane>
+            </content>
+         <font>
+            <Font size="18.0" />
+         </font>
+        </TitledPane>
+    </bottom>
 </BorderPane>

@@ -15,6 +15,18 @@ public class Statistics {
         totalAccesses++;
     }
 
+    public int getTotalAccesses() {
+        return totalAccesses;
+    }
+
+    public int getHits() {
+        return hits;
+    }
+
+    public int getMisses() {
+        return misses;
+    }
+
     public double getHitRate() {
         return totalAccesses == 0 ? 0 : (double) hits / totalAccesses;
     }
